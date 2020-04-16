@@ -1,0 +1,11 @@
+common:
+  parallel: 12
+  batch: 10000
+
+src:
+  url:
+    - localhost:6379
+  password:
+  dbNumber: 0
+  cluster: false
+  ttl: true
