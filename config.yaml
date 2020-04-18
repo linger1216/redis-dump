@@ -6,6 +6,6 @@ src:
   url:
     - localhost:6379
   password:
-  dbNumber: 0
-  cluster: false
+  dbNumber:
+    - 0
   ttl: true

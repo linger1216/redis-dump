@@ -16,16 +16,16 @@ func (c *commonConfig) Default() {
 	}
 }
 
-type srcRedisConfig struct {
+type redisConfig struct {
 	Network  string
 	Url      []string
 	Password string
-	DBNumber []int
+	DBNumber int
 	TTL      bool
 	Match    string
 }
 
-func (c *srcRedisConfig) Default() {
+func (c *redisConfig) Default() {
 	if len(c.Network) == 0 {
 		c.Network = "tcp"
 	}
@@ -72,7 +72,7 @@ func (c *destConfig) Default() {
 
 type DumpConfig struct {
 	Common commonConfig
-	Src    srcRedisConfig
+	Src    redisConfig
 	Dest   destConfig
 }
 

@@ -3,6 +3,7 @@ package core
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -14,41 +15,24 @@ type OutputFileConfig struct {
 	WriteSize int
 }
 
-func NewOutputFileConfig(flag string, filename string, writeSize int) *OutputFileConfig {
-	return &OutputFileConfig{Flag: flag, Filename: filename, WriteSize: writeSize}
-}
-
 type OutputFile struct {
 	sync.RWMutex
 	f *os.File
 	w *bufio.Writer
+	s Serializer
 }
 
-func (x *OutputFile) save(commands []string) error {
-	x.Lock()
-	defer x.Unlock()
-	var content bytes.Buffer
-	for i := range commands {
-		_, err := content.WriteString(commands[i])
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (x *OutputFile) close() {
-	_ = x.w.Flush()
-	_ = x.f.Close()
-}
-
-func NewOutputCSV(cfg *OutputFileConfig) *OutputFile {
+func NewOutputFile(cfg *OutputFileConfig) *OutputFile {
 	ret := &OutputFile{}
+
 	flag := 0
-	if strings.ToLower(cfg.Flag) == "append" {
+	switch strings.ToLower(cfg.Flag) {
+	case "append":
 		flag = os.O_RDWR | os.O_CREATE | os.O_APPEND
-	} else if strings.ToLower(cfg.Flag) == "trunc" {
+	case "trunc":
 		flag = os.O_RDWR | os.O_CREATE | os.O_TRUNC
+	default:
+		panic(fmt.Errorf("unsupported flag:%s", cfg.Flag))
 	}
 
 	writeSize := cfg.WriteSize
@@ -62,5 +46,26 @@ func NewOutputCSV(cfg *OutputFileConfig) *OutputFile {
 	}
 	ret.f = obj
 	ret.w = bufio.NewWriterSize(ret.f, writeSize)
+
+	ret.s = RESPSerializer
 	return ret
+}
+
+func (x *OutputFile) save(commands [][]string) error {
+	x.Lock()
+	defer x.Unlock()
+	var content bytes.Buffer
+	for i := range commands {
+		_, err := content.WriteString(x.s(commands[i]))
+		if err != nil {
+			return err
+		}
+	}
+	_, err := x.w.Write(content.Bytes())
+	return err
+}
+
+func (x *OutputFile) close() {
+	_ = x.w.Flush()
+	_ = x.f.Close()
 }

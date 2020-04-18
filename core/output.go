@@ -1,6 +1,6 @@
 package core
 
 type output interface {
-	save(commands []string) error
+	save(commands [][]string) error
 	close()
 }

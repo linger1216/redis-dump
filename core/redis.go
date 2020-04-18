@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v7"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -62,13 +61,7 @@ func RESPSerializer(cmd []string) string {
 	return s
 }
 
-// RedisCmdSerializer will serialize cmd to a string with redis commands
-func RedisCmdSerializer(cmd []string) string {
-	return strings.Join(cmd, " ")
-}
-
-func keysTypes(client *redis.Client, keys []string) ([]string, error) {
-	pipe := client.Pipeline()
+func keysTypes(pipe redis.Pipeliner, keys []string) ([]string, error) {
 	for _, key := range keys {
 		pipe.Type(key)
 	}
@@ -84,21 +77,16 @@ func keysTypes(client *redis.Client, keys []string) ([]string, error) {
 	return types, nil
 }
 
-func DumpKeys(client *redis.Client, keys []string, ttl bool, s Serializer) ([]string, error) {
-	if len(keys) == 0 {
+func dumpKeys(pipe redis.Pipeliner, keys []string, ttl bool) ([][]string, error) {
+	if len(keys) == 0 || pipe == nil {
 		return nil, nil
 	}
 
-	if client == nil || s == nil {
-		return nil, fmt.Errorf("invalid para")
-	}
-
-	types, err := keysTypes(client, keys)
+	types, err := keysTypes(pipe, keys)
 	if err != nil {
 		return nil, err
 	}
 
-	pipe := client.Pipeline()
 	for i, t := range types {
 		switch t {
 		case "string":
@@ -141,27 +129,26 @@ func DumpKeys(client *redis.Client, keys []string, ttl bool, s Serializer) ([]st
 	ensure(len(ttls) == len(keys))
 	ensure(len(ttls) == len(values))
 
-	commands := make([]string, 0, len(values))
+	commands := make([][]string, 0, len(values))
 	for i, v := range values {
 		switch types[i] {
 		case "string":
-			commands = append(commands, s(stringToRedisCmd(keys[i], v.(*redis.StringCmd).Val())))
+			commands = append(commands, stringToRedisCmd(keys[i], v.(*redis.StringCmd).Val()))
 		case "list":
-			commands = append(commands, s(listToRedisCmd(keys[i], v.(*redis.StringSliceCmd).Val())))
+			commands = append(commands, listToRedisCmd(keys[i], v.(*redis.StringSliceCmd).Val()))
 		case "set":
-			commands = append(commands, s(setToRedisCmd(keys[i], v.(*redis.StringSliceCmd).Val())))
+			commands = append(commands, setToRedisCmd(keys[i], v.(*redis.StringSliceCmd).Val()))
 		case "hash":
-			commands = append(commands, s(hashToRedisCmd(keys[i], v.(*redis.StringStringMapCmd).Val())))
+			commands = append(commands, hashToRedisCmd(keys[i], v.(*redis.StringStringMapCmd).Val()))
 		case "zset":
-			commands = append(commands, s(zsetToRedisCmd(keys[i], v.(*redis.StringSliceCmd).Val())))
+			commands = append(commands, zsetToRedisCmd(keys[i], v.(*redis.StringSliceCmd).Val()))
 		default:
 			return nil, fmt.Errorf("Key %s is of unreconized type %s", keys[i], types[i])
 		}
-
 		if ttls != nil && ttls[i] != nil {
 			ttl := ttls[i].(*redis.DurationCmd).Val().Seconds()
 			if ttl > 0 {
-				commands = append(commands, s(ttlToRedisCmd(keys[i], int64(ttl))))
+				commands = append(commands, ttlToRedisCmd(keys[i], int64(ttl)))
 			}
 		}
 	}
