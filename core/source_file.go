@@ -6,9 +6,13 @@ import (
 )
 
 type sourceFileConfig struct {
-	Filename   string
-	Batch      int
-	ReaderSize int
+	Filename   string `json:"filename"`
+	Batch      int    `json:"batch"`
+	ReaderSize int    `json:"readerSize"`
+}
+
+func (s sourceFileConfig) newSource() source {
+	return newSourceFile(s)
 }
 
 type sourceFile struct {
@@ -19,7 +23,7 @@ type sourceFile struct {
 	total int64
 }
 
-func newSourceFile(conf *sourceFileConfig) *sourceFile {
+func newSourceFile(conf sourceFileConfig) *sourceFile {
 	ret := &sourceFile{}
 	obj, err := os.Open(conf.Filename)
 	if err != nil {

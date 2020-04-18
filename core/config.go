@@ -3,8 +3,8 @@ package core
 import "runtime"
 
 type commonConfig struct {
-	Parallel int
-	Batch    int `default:"5000"`
+	Parallel int `json:"parallel"`
+	Batch    int `json:"batch"`
 }
 
 func (c *commonConfig) Default() {
@@ -16,68 +16,20 @@ func (c *commonConfig) Default() {
 	}
 }
 
-type redisConfig struct {
-	Network  string
-	Url      []string
-	Password string
-	DBNumber int
-	TTL      bool
-	Match    string
+type sourceConfig struct {
+	File    sourceFileConfig         `json:"file"`
+	Single  sourceSingleRedisConfig  `json:"single"`
+	Cluster sourceClusterRedisConfig `json:"cluster"`
 }
 
-func (c *redisConfig) Default() {
-	if len(c.Network) == 0 {
-		c.Network = "tcp"
-	}
-
-	if len(c.Match) == 0 {
-		c.Match = "*"
-	}
-}
-
-// --------------------------------------------------------------------------------
-
-type destFileConfig struct {
-	Out      string
-	FileName string
-}
-
-func (c *destFileConfig) Default() {
-	if len(c.Out) == 0 {
-		c.Out = "resp"
-	}
-}
-
-type destRedisConfig struct {
-	Network  string
-	Url      []string
-	Password string
-}
-
-func (c *destRedisConfig) Default() {
-	if len(c.Network) == 0 {
-		c.Network = "tcp"
-	}
-}
-
-type destConfig struct {
-	File  destFileConfig
-	Redis destRedisConfig
-}
-
-func (c *destConfig) Default() {
-	c.Redis.Default()
-	c.File.Default()
+type outputConfig struct {
+	File    outputFileConfig         `json:"file"`
+	Single  outputSingleRedisConfig  `json:"single"`
+	Cluster outputClusterRedisConfig `json:"cluster"`
 }
 
 type DumpConfig struct {
-	Common commonConfig
-	Src    redisConfig
-	Dest   destConfig
-}
-
-func (c *DumpConfig) Default() {
-	c.Common.Default()
-	c.Src.Default()
-	c.Dest.Default()
+	Common  commonConfig   `json:"common"`
+	Sources []sourceConfig `json:"sources"`
+	Outputs []outputConfig `json:"outputs"`
 }

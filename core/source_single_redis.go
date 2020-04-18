@@ -2,6 +2,20 @@ package core
 
 import "github.com/go-redis/redis/v7"
 
+type sourceSingleRedisConfig struct {
+	Network  string `json:"network"`
+	Url      string `json:"url"`
+	Password string `json:"password"`
+	DBNumber int    `json:"dbNumber"`
+	TTL      bool   `json:"ttl"`
+	Match    string `json:"match"`
+	Count    int64  `json:"count"`
+}
+
+func (s sourceSingleRedisConfig) newSource() source {
+	return newSourceSingleRedis(s)
+}
+
 type sourceSingleRedis struct {
 	c     *redis.Client
 	TTL   bool
@@ -10,6 +24,21 @@ type sourceSingleRedis struct {
 
 	cursor uint64
 	end    bool
+}
+
+func newSourceSingleRedis(conf sourceSingleRedisConfig) *sourceSingleRedis {
+	ret := &sourceSingleRedis{}
+	ret.TTL = conf.TTL
+	ret.Match = conf.Match
+	ret.Count = conf.Count
+
+	ret.c = redis.NewClient(&redis.Options{
+		Network:  conf.Network,
+		Addr:     conf.Url,
+		Password: conf.Password,
+		DB:       conf.DBNumber,
+	})
+	return ret
 }
 
 func (s *sourceSingleRedis) has() bool {

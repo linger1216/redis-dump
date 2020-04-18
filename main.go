@@ -23,8 +23,6 @@ func main() {
 		panic(fmt.Errorf("need config yaml file"))
 	}
 
-	conf.Default()
-
 	buf, _ := json.Marshal(conf)
 	fmt.Println(string(buf))
 
@@ -33,9 +31,9 @@ func main() {
 	// 集群是不支持db number除了0以外的
 	//xx := redis.NewClusterClient(nil)
 	//client := redis.NewClient(&redis.Options{
-	//	Network:  conf.Src.Network,
-	//	Addr:     conf.Src.Url[0],
-	//	Password: "",
+	//	network:  conf.Src.network,
+	//	Addr:     conf.Src.url[0],
+	//	password: "",
 	//	DB:       0, // use default DB
 	//})
 	//

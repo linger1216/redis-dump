@@ -112,7 +112,7 @@ func (r *RESPReader) readArray(line []byte, blob []string) ([]string, error) {
 		return nil, err
 	}
 
-	// Read `count` number of RESP objects in the array.
+	// Read `Count` number of RESP objects in the array.
 	for i := 0; i < count; i++ {
 		buf, err := r.ReadObject(blob)
 		if err != nil {

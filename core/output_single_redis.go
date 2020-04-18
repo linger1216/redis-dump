@@ -6,11 +6,33 @@ import (
 	"strings"
 )
 
-type OutputSingleRedisConfig struct {
-	Network  string
-	Url      string
-	Password string
-	DBNumber int
+type outputSingleRedisConfig struct {
+	Network  string `json:"network"`
+	Url      string `json:"url"`
+	Password string `json:"password"`
+	DBNumber int    `json:"dbNumber"`
+}
+
+func (o outputSingleRedisConfig) newOutput() output {
+	return NewOutputSingleRedis(o)
+}
+
+func NewOutputSingleRedis(c outputSingleRedisConfig) *OutputSingleRedis {
+	if len(c.Network) == 0 {
+		c.Network = "tcp"
+	}
+	ret := &OutputSingleRedis{}
+	ret.client = redis.NewClient(&redis.Options{
+		Network:  c.Network,
+		Addr:     c.Url,
+		Password: c.Password,
+		DB:       c.DBNumber,
+	})
+	_, err := ret.client.Ping().Result()
+	if err != nil {
+		panic(err)
+	}
+	return ret
 }
 
 type OutputSingleRedis struct {
@@ -48,22 +70,4 @@ func (x *OutputSingleRedis) save(commands [][]string) error {
 
 func (x *OutputSingleRedis) close() {
 	_ = x.client.Close()
-}
-
-func NewOutputSingleRedis(c *OutputSingleRedisConfig) *OutputSingleRedis {
-	if len(c.Network) == 0 {
-		c.Network = "tcp"
-	}
-	ret := &OutputSingleRedis{}
-	ret.client = redis.NewClient(&redis.Options{
-		Network:  c.Network,
-		Addr:     c.Url,
-		Password: c.Password,
-		DB:       c.DBNumber,
-	})
-	_, err := ret.client.Ping().Result()
-	if err != nil {
-		panic(err)
-	}
-	return ret
 }

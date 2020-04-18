@@ -9,10 +9,14 @@ import (
 	"sync"
 )
 
-type OutputFileConfig struct {
-	Flag      string
-	Filename  string
-	WriteSize int
+type outputFileConfig struct {
+	Flag      string `json:"flag"`
+	Filename  string `json:"filename"`
+	WriteSize int    `json:"writeSize"`
+}
+
+func (s outputFileConfig) newOutput() output {
+	return NewOutputFile(s)
 }
 
 type OutputFile struct {
@@ -22,25 +26,25 @@ type OutputFile struct {
 	s Serializer
 }
 
-func NewOutputFile(cfg *OutputFileConfig) *OutputFile {
+func NewOutputFile(conf outputFileConfig) *OutputFile {
 	ret := &OutputFile{}
 
 	flag := 0
-	switch strings.ToLower(cfg.Flag) {
+	switch strings.ToLower(conf.Flag) {
 	case "append":
 		flag = os.O_RDWR | os.O_CREATE | os.O_APPEND
 	case "trunc":
 		flag = os.O_RDWR | os.O_CREATE | os.O_TRUNC
 	default:
-		panic(fmt.Errorf("unsupported flag:%s", cfg.Flag))
+		panic(fmt.Errorf("unsupported Flag:%s", conf.Flag))
 	}
 
-	writeSize := cfg.WriteSize
+	writeSize := conf.WriteSize
 	if writeSize == 0 {
 		writeSize = 4096
 	}
 
-	obj, err := os.OpenFile(cfg.Filename, flag, 0644)
+	obj, err := os.OpenFile(conf.Filename, flag, 0644)
 	if err != nil {
 		panic(err)
 	}

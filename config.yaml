@@ -2,7 +2,7 @@ common:
   parallel: 12
   batch: 10000
 
-src:
+sources:
   url:
     - localhost:6379
   password:

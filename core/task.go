@@ -61,7 +61,7 @@ func newTasks(c *DumpConfig) ([]Task, error) {
 	//
 	//	outs := make([]output, 0)
 	//	if len(c.Dest.File.FileName) > 0 {
-	//		outs = append(outs, NewOutputCSV(&OutputFileConfig{
+	//		outs = append(outs, NewOutputCSV(&outputFileConfig{
 	//			Flag:      "trunk",
 	//			Filename:  c.Dest.File.FileName,
 	//			WriteSize: 4096,
@@ -74,9 +74,9 @@ func newTasks(c *DumpConfig) ([]Task, error) {
 	//
 	//	task = append(task, &ClusterTask{
 	//		cli:   client,
-	//		ttl:   c.Src.TTL,
-	//		match: c.Src.Match,
-	//		batch: c.Common.Batch,
+	//		TTL:   c.Src.TTL,
+	//		Match: c.Src.Match,
+	//		Batch: c.Common.Batch,
 	//		out:   nil,
 	//	})
 	//
@@ -84,7 +84,7 @@ func newTasks(c *DumpConfig) ([]Task, error) {
 	//
 	//}
 	//
-	//for _, url := range c.Src.Url {
+	//for _, Url := range c.Src.Url {
 	//
 	//}
 
