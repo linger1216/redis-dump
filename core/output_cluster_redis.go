@@ -9,15 +9,20 @@ type outputClusterRedisConfig struct {
 	Password string   `json:"password"`
 }
 
-func (o outputClusterRedisConfig) newOutput() output {
+func (o *outputClusterRedisConfig) newOutput() output {
 	return NewOutputClusterRedis(o)
 }
 
-func NewOutputClusterRedis(c outputClusterRedisConfig) *OutputClusterRedis {
+func NewOutputClusterRedis(conf *outputClusterRedisConfig) *OutputClusterRedis {
+
+	if conf == nil || len(conf.Url) == 0 {
+		return nil
+	}
+
 	ret := &OutputClusterRedis{}
 	ret.client = redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs:    c.Url,
-		Password: c.Password,
+		Addrs:    conf.Url,
+		Password: conf.Password,
 	})
 	_, err := ret.client.Ping().Result()
 	if err != nil {

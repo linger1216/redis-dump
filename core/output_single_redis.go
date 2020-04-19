@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v7"
 	"strings"
+	"time"
 )
 
 type outputSingleRedisConfig struct {
@@ -13,20 +14,27 @@ type outputSingleRedisConfig struct {
 	DBNumber int    `json:"dbNumber"`
 }
 
-func (o outputSingleRedisConfig) newOutput() output {
+func (o *outputSingleRedisConfig) newOutput() output {
 	return NewOutputSingleRedis(o)
 }
 
-func NewOutputSingleRedis(c outputSingleRedisConfig) *OutputSingleRedis {
-	if len(c.Network) == 0 {
-		c.Network = "tcp"
+func NewOutputSingleRedis(conf *outputSingleRedisConfig) *OutputSingleRedis {
+
+	if conf == nil || len(conf.Url) == 0 {
+		return nil
+	}
+
+	if len(conf.Network) == 0 {
+		conf.Network = "tcp"
 	}
 	ret := &OutputSingleRedis{}
 	ret.client = redis.NewClient(&redis.Options{
-		Network:  c.Network,
-		Addr:     c.Url,
-		Password: c.Password,
-		DB:       c.DBNumber,
+		Network:      conf.Network,
+		Addr:         conf.Url,
+		Password:     conf.Password,
+		DB:           conf.DBNumber,
+		ReadTimeout:  time.Second * 10,
+		WriteTimeout: time.Second * 10,
 	})
 	_, err := ret.client.Ping().Result()
 	if err != nil {

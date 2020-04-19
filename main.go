@@ -16,34 +16,17 @@ var (
 func main() {
 
 	kingpin.Parse()
-
-	conf := core.DumpConfig{}
-	err := configor.Load(&conf, *configFileName)
+	conf := &core.DumpConfig{}
+	err := configor.Load(conf, *configFileName)
 	if err != nil {
-		panic(fmt.Errorf("need config yaml file"))
+		//panic(fmt.Errorf("need config.json file"))
 	}
 
 	buf, _ := json.Marshal(conf)
 	fmt.Println(string(buf))
 
-	// make tasks
-
-	// 集群是不支持db number除了0以外的
-	//xx := redis.NewClusterClient(nil)
-	//client := redis.NewClient(&redis.Options{
-	//	network:  conf.Src.network,
-	//	Addr:     conf.Src.url[0],
-	//	password: "",
-	//	DB:       0, // use default DB
-	//})
-	//
-	//pong, err := client.Ping().Result()
-	//fmt.Println(pong, err)
-
-	//xx := client.Scan(0,"",100)
-	//xx.String()
-	//xx.Val()
-
-	//core.dumpKeys(client, []string{"35f1ab794", "36d083e44"}, true, core.RedisCmdSerializer)
-
+	err = core.Exec(conf)
+	if err != nil {
+		panic(err)
+	}
 }

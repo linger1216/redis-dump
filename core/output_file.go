@@ -15,7 +15,7 @@ type outputFileConfig struct {
 	WriteSize int    `json:"writeSize"`
 }
 
-func (s outputFileConfig) newOutput() output {
+func (s *outputFileConfig) newOutput() output {
 	return NewOutputFile(s)
 }
 
@@ -26,9 +26,13 @@ type OutputFile struct {
 	s Serializer
 }
 
-func NewOutputFile(conf outputFileConfig) *OutputFile {
-	ret := &OutputFile{}
+func NewOutputFile(conf *outputFileConfig) *OutputFile {
 
+	if conf == nil || len(conf.Filename) == 0 {
+		return nil
+	}
+
+	ret := &OutputFile{}
 	flag := 0
 	switch strings.ToLower(conf.Flag) {
 	case "append":

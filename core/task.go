@@ -1,92 +1,89 @@
 package core
 
 import (
-	"github.com/go-redis/redis/v7"
+	"runtime"
 )
 
-type Task interface {
-	exec() error
-	close()
-}
+func Exec(conf *DumpConfig) error {
 
-type StandaloneTask struct {
-	cli      *redis.Client
-	dbNumber int
-	ttl      bool
-	match    string
-	batch    int
-	out      output
-}
+	if conf.Common.Batch == 0 {
+		conf.Common.Batch = 5000
+	}
 
-func (c *StandaloneTask) exec() error {
-	panic("implement me")
-}
+	//ch := make(chan [][]string, conf.Common.Batch)
 
-func (c *StandaloneTask) close() {
-	panic("implement me")
-}
+	if conf.Common.Parallel == 0 {
+		conf.Common.Parallel = runtime.NumCPU()
+	}
+	for i := range conf.Source.File {
+		conf.Source.File[i].Batch = conf.Common.Batch
+	}
+	for i := range conf.Source.Single {
+		conf.Source.Single[i].Count = int64(conf.Common.Batch)
+	}
+	for i := range conf.Source.Cluster {
+		conf.Source.Cluster[i].Count = int64(conf.Common.Batch)
+	}
 
-type ClusterTask struct {
-	cli   *redis.ClusterClient
-	ttl   bool
-	match string
-	batch int
-	out   []output
-}
+	outputs := make([]output, 0, 3)
 
-func (c *ClusterTask) exec() error {
-	panic("implement me")
-}
+	if conf.Output.File != nil {
+		if v := conf.Output.File.newOutput(); v != nil {
+			outputs = append(outputs, v)
+		}
+	}
 
-func (c *ClusterTask) close() {
-	panic("implement me")
-}
+	if conf.Output.Single != nil {
+		if v := conf.Output.Single.newOutput(); v != nil {
+			outputs = append(outputs, v)
+		}
+	}
 
-func newTasks(c *DumpConfig) ([]Task, error) {
-	//if c == nil {
-	//	return nil, nil
-	//}
-	//
-	//task := make([]Task, 0)
-	//if len(c.Src.Url) > 1 {
-	//	client := redis.NewClusterClient(&redis.ClusterOptions{
-	//		Addrs:        c.Src.Url,
-	//		Password:     c.Src.Password,
-	//		ReadTimeout:  time.Second * 5,
-	//		WriteTimeout: time.Second * 5,
-	//	})
-	//	if _, err := client.Ping().Result(); err != nil {
-	//		return nil, err
-	//	}
-	//
-	//	outs := make([]output, 0)
-	//	if len(c.Dest.File.FileName) > 0 {
-	//		outs = append(outs, NewOutputCSV(&outputFileConfig{
-	//			Flag:      "trunk",
-	//			Filename:  c.Dest.File.FileName,
-	//			WriteSize: 4096,
-	//		}))
-	//	}
-	//
-	//	if len(c.Dest.Redis.Url) > 0 {
-	//
-	//	}
-	//
-	//	task = append(task, &ClusterTask{
-	//		cli:   client,
-	//		TTL:   c.Src.TTL,
-	//		Match: c.Src.Match,
-	//		Batch: c.Common.Batch,
-	//		out:   nil,
-	//	})
-	//
-	//} else {
-	//
-	//}
-	//
-	//for _, Url := range c.Src.Url {
-	//
-	//}
+	if conf.Output.Cluster != nil {
+		if v := conf.Output.Cluster.newOutput(); v != nil {
+			outputs = append(outputs, v)
+		}
+	}
 
-	return nil, nil
+	read := func(s source, outputs []output) error {
+		for s.has() {
+			commands, err := s.next()
+			if err != nil {
+				return err
+			}
+			for _, w := range outputs {
+				err = w.save(commands)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	for _, v := range conf.Source.File {
+		s := v.newSource()
+		err := read(s, outputs)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, v := range conf.Source.Single {
+		s := v.newSource()
+		err := read(s, outputs)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, v := range conf.Source.Cluster {
+		s := v.newSource()
+		err := read(s, outputs)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

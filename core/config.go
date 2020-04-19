@@ -17,19 +17,19 @@ func (c *commonConfig) Default() {
 }
 
 type sourceConfig struct {
-	File    sourceFileConfig         `json:"file"`
-	Single  sourceSingleRedisConfig  `json:"single"`
-	Cluster sourceClusterRedisConfig `json:"cluster"`
+	File    []*sourceFileConfig         `json:"file"`
+	Single  []*sourceSingleRedisConfig  `json:"single"`
+	Cluster []*sourceClusterRedisConfig `json:"cluster"`
 }
 
 type outputConfig struct {
-	File    outputFileConfig         `json:"file"`
-	Single  outputSingleRedisConfig  `json:"single"`
-	Cluster outputClusterRedisConfig `json:"cluster"`
+	File    *outputFileConfig         `json:"file"`
+	Single  *outputSingleRedisConfig  `json:"single"`
+	Cluster *outputClusterRedisConfig `json:"cluster"`
 }
 
 type DumpConfig struct {
-	Common  commonConfig   `json:"common"`
-	Sources []sourceConfig `json:"sources"`
-	Outputs []outputConfig `json:"outputs"`
+	Common *commonConfig `json:"common"`
+	Source *sourceConfig `json:"source"`
+	Output *outputConfig `json:"output"`
 }

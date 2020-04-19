@@ -1,46 +1,34 @@
 {
   "common": {
     "parallel": 12,
-    "batch": 6000
+    "batch": 5000
   },
-  "sources": [{
-    "file": {
-      "filename": "bk.resp",
-      "batch": 6000,
-      "readerSize": 131072
-    },
+  "source": {
+    "file": [
+      {
+        "filename": "bk.resp",
+        "batch": 5000,
+        "readerSize": 131072
+      }
+    ],
+    "single": [
+      {
+        "network": "tcp",
+        "url": "localhost:6379",
+        "password": "",
+        "dbNumber": 0,
+        "ttl": true,
+        "match": "*",
+        "count": 0
+      }
+    ]
+  },
+  "output": {
     "single": {
       "network": "tcp",
-      "url": "localhost:6379",
-      "password": "",
-      "dbNumber": 0,
-      "ttl": true,
-      "match": "*",
-      "count": 0
-    },
-    "cluster": {
-      "url": ["localhost:6379"],
-      "password": "",
-      "ttl": true,
-      "match": "*",
-      "count": 0
-    }
-  }],
-  "outputs": [{
-    "file": {
-      "flag": "trunc",
-      "filename": "test.resp",
-      "writeSize": 131072
-    },
-    "single": {
-      "network": "tcp",
-      "url": "localhost:6379",
+      "url": "localhost:7379",
       "password": "",
       "dbNumber": 0
-    },
-    "cluster": {
-      "url": ["localhost:6379", "localhost:6380"],
-      "password": ""
     }
-  }]
+  }
 }
